@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
-import { Dialect } from 'sequelize'; // 
+import { Dialect } from 'sequelize';
 import { config } from './config/config';
 
 const dialect: Dialect = config.dialect as Dialect;
@@ -10,12 +10,7 @@ export const sequelize = new Sequelize({
   database: config.database,
   host: config.host,
   dialect,
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
-storage: config.storage || ':memory:',
+  storage: config.storage || ':memory:',
+  // 🚫 Removed dialectOptions.ssl to avoid SSL-related errors
 });
 

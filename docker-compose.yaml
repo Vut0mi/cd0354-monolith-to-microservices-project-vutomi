@@ -1,40 +1,82 @@
 version: "3"
 services:
   reverseproxy:
-      image: reverseproxy
-      ports:
-          - 8080:8080
-      restart: always
-      depends_on:
-        - backend-user
-        - backend-feed
+    build: ./udagram-reverseproxy
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend-user
+      - backend-feed
+      - frontend
+    networks:
+      - udagram-network
+
   backend-user:
     image: udagram-api-user
     environment:
-      POSTGRES_USERNAME: $POSTGRES_USERNAME
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD 
-      POSTGRES_DB: $POSTGRES_DB 
-      POSTGRES_HOST: $POSTGRES_HOST
-      AWS_REGION: $AWS_REGION 
-      AWS_PROFILE: $AWS_PROFILE 
-      AWS_BUCKET: $AWS_BUCKET
-      JWT_SECRET: $JWT_SECRET
-      URL: "http://localhost:8100"
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      AWS_REGION: ${AWS_REGION}
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_BUCKET: ${AWS_BUCKET}
+      JWT_SECRET: ${JWT_SECRET}
+      URL: "http://reverseproxy"
+      DB_SSL: "false"
+      DB_DIALECT_OPTIONS: '{"ssl":false}'
+      # Alternative if using connection string:
+      # DATABASE_URL: "postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+    depends_on:
+      - postgres
+    networks:
+      - udagram-network
+
   backend-feed:
     image: udagram-api-feed
     volumes:
-      - $HOME/.aws:/root/.aws
+      - ${HOME}/.aws:/root/.aws
     environment:
-      POSTGRES_USERNAME: $POSTGRES_USERNAME
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD 
-      POSTGRES_DB: $POSTGRES_DB
-      POSTGRES_HOST: $POSTGRES_HOST
-      AWS_REGION: $AWS_REGION
-      AWS_PROFILE: $AWS_PROFILE 
-      AWS_BUCKET: $AWS_BUCKET
-      JWT_SECRET: $JWT_SECRET
-      URL: "http://localhost:8100"
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      AWS_REGION: ${AWS_REGION}
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_BUCKET: ${AWS_BUCKET}
+      JWT_SECRET: ${JWT_SECRET}
+      URL: "http://reverseproxy"
+      DB_SSL: "false"
+      DB_DIALECT_OPTIONS: '{"ssl":false}'
+      # Alternative if using connection string:
+      # DATABASE_URL: "postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+    depends_on:
+      - postgres
+    networks:
+      - udagram-network
+
   frontend:
-    image: udagram-frontend:local
+    build: 
+      context: ./udagram-frontend
+      dockerfile: Dockerfile
     ports:
       - "8100:80"
+    environment:
+      API_HOST: "http://localhost:8080"
+    networks:
+      - udagram-network
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - udagram-network
+
+networks:
+  udagram-network:
+    driver: bridge
