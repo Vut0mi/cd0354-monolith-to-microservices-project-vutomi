@@ -35,7 +35,7 @@ jobs:
           name: Build and push reverseproxy
           command: |
             if [ -d ./reverseproxy ]; then
-              docker build -t vut0mi/reverseproxy:v1 ./reverseproxy
+              docker build -t vut0mi/reverseproxy:v1 ./udagram-reverseproxy
               docker push vut0mi/reverseproxy:v1
             else
               echo "Directory ./reverseproxy not found. Skipping build and push for reverseproxy." && exit 0
