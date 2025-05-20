@@ -1,61 +1,49 @@
-# This config was automatically generated from your source code
-# Stacks detected: cicd:github-actions:.github/workflows,deps:node:udagram-api-user
 version: 2.1
-orbs:
-  node: circleci/node@5
-jobs:
-  test-node:
-    # Install node dependencies and run tests
-    executor: node/default
-    working_directory: ~/project/udagram-api-user
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Run tests
-          command: echo \"No test specified in package.json\"
-  build-node:
-    # Build node project
-    executor: node/default
-    working_directory: ~/project/udagram-api-user
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          command: npm run build
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
-      - run:
-          name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
-      - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
+
+executors:
+  docker-executor:
     docker:
       - image: cimg/base:stable
+
+jobs:
+  build-and-push:
+    executor: docker-executor
     steps:
-      # Replace this with steps to deploy to users
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Docker login
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
-          name: found github actions config
-          command: ':'
+          name: Build and push udagram-api-feed
+          command: |
+            docker build -t vut0mi/udagram-api-feed:v1 ./udagram-api-feed
+            docker push vut0mi/udagram-api-feed:v1
+      - run:
+          name: Build and push udagram-api-user
+          command: |
+            docker build -t vut0mi/udagram-api-user:v1 ./udagram-api-user
+            docker push vut0mi/udagram-api-user:v1
+      - run:
+          name: Build and push udagram-frontend
+          command: |
+            docker build -t vut0mi/udagram-frontend:v1 ./udagram-frontend
+            docker push vut0mi/udagram-frontend:v1
+      - run:
+          name: Build and push reverseproxy
+          command: |
+            docker build -t vut0mi/reverseproxy:v1 ./reverseproxy
+            docker push vut0mi/reverseproxy:v1
+      - run:
+          name: Build and push custom Postgres image
+          command: |
+            docker build -t vut0mi/postgres:v1 ./postgres
+            docker push vut0mi/postgres:v1
+
 workflows:
-  build-and-test:
+  version: 2
+  build_and_push:
     jobs:
-      - test-node
-      - build-node:
-          requires:
-            - test-node
-    # - deploy:
-    #     requires:
-    #       - build-node
+      - build-and-push
