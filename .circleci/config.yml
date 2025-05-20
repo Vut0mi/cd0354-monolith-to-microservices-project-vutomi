@@ -40,11 +40,6 @@ jobs:
             else
               echo "Directory ./reverseproxy not found. Skipping build and push for reverseproxy." && exit 0
             fi
-      - run:
-          name: Build and push custom Postgres image
-          command: |
-            docker build -t vut0mi/postgres:v1 ./postgres
-            docker push vut0mi/postgres:v1
 
 workflows:
   version: 2
