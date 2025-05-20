@@ -1,16 +1,30 @@
 export const config = {
-  username: process.env.POSTGRES_USERNAME,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
-  host: process.env.POSTGRES_HOST,
-  dialect: 'postgres', // or 'sqlite'
-  storage: ':memory:', // optional, for SQLite or testing
-  aws_region: process.env.AWS_REGION,
-  aws_profile: process.env.AWS_PROFILE,
-  aws_media_bucket: process.env.AWS_MEDIA_BUCKET,
-  url: process.env.URL,
-  jwt: {
-    secret: process.env.JWT_SECRET,
+  // ✅ Database configuration
+  username: process.env.POSTGRES_USERNAME || '',
+  password: process.env.POSTGRES_PASSWORD || '',
+  database: process.env.POSTGRES_DB || '',
+  host: process.env.POSTGRES_HOST || '',
+  dialect: 'postgres',
+
+  // ✅ AWS configuration
+  aws: {
+    region: process.env.AWS_REGION || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    profile: process.env.AWS_PROFILE || 'default',
+    mediaBucket: process.env.AWS_MEDIA_BUCKET || '',
   },
+
+  // ✅ App configuration
+  url: process.env.URL || 'http://localhost:8100',
+  jwt: {
+    secret: process.env.JWT_SECRET || '',
+  },
+
+  // ✅ Dev/Test overrides
+  ...(process.env.NODE_ENV === 'test' && {
+    storage: ':memory:',
+    logging: false,
+  }),
 };
 
