@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reverseproxy-config
+data:
+  nginx.conf: |
+    worker_processes 1;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        sendfile on;
+
+        access_log /dev/stdout;
+        error_log /dev/stdout debug;
+
+        upstream user {
+            server udagram-api-user:8080;
+        }
+
+        upstream feed {
+            server udagram-api-feed:8080;
+        }
+
+        server {
+            listen 8080;
+
+            location /api/v0/feed {
+                proxy_pass http://feed;
+                proxy_set_header   Host $host;
+                proxy_set_header   X-Real-IP $remote_addr;
+                proxy_set_header   X-NginX-Proxy true;
+                proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Host $server_name;
+            }
+
+            location /api/v0/users {
+                proxy_pass http://user;
+                proxy_set_header   Host $host;
+                proxy_set_header   X-Real-IP $remote_addr;
+                proxy_set_header   X-NginX-Proxy true;
+                proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Host $server_name;
+            }
+
+            location / {
+                proxy_pass http://udagram-frontend;
+            }
+
+            location = /favicon.ico {
+                return 204;
+            }
+        }
+    }
+
