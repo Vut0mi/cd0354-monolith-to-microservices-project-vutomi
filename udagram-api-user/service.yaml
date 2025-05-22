@@ -4,8 +4,9 @@ metadata:
   name: udagram-api-user
 spec:
   type: ClusterIP
-  ports:
-    - port: 8080
   selector:
     app: udagram-api-user
+  ports:
+    - port: 8080         # Exposed to NGINX and other services
+      targetPort: 8080   # Actual app port inside the container
 
