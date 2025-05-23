@@ -2,11 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: udagram-api-user
+  labels:
+    app: udagram-api-user
 spec:
   type: ClusterIP
   selector:
     app: udagram-api-user
   ports:
-    - port: 8080         # Exposed to NGINX and other services
-      targetPort: 8080   # Actual app port inside the container
+    - name: http
+      port: 8080           # Exposed port (what ELB calls)
+      targetPort: 8100     # Internal container port
+  type: LoadBalancer       # Or ClusterIP/NodePort, depending on setup
 
